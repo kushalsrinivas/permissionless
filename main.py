@@ -1,13 +1,30 @@
 from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram.ext import ContextTypes,  Updater, CommandHandler, CallbackContext
+import logging
+import random
 
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 token = "6096641141:AAE7Mcdq2ybgJBxk_eA6mPwh4yNdpz4ZR-k"
 username = "@PokerDokerDealer_bot"
 
+players = {}
+deck = []
+community_cards = []
+current_player = None
 
+def generate_deck():
+    rank = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
+    suits = ['Hearts', 'Diamonds', 'Clubs', 'Spades']
+    deck = [{'rank': rank, 'suit': suit} for rank in rank for suit in suits]
+    random.shuffle(deck)
+    return deck
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    return await update.message.reply_text("hello this is a wowuwo")
-
+    global players, deck, community_cards, current_player
+    players = {}
+    deck = generate_deck()
+    community_cards = []
+    current_player = None
+    return await update.message.reply_text('New poker game started. Type /join to join the game.')
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return await update.message.reply_text("this is a help message")
