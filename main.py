@@ -26,6 +26,14 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     current_player = None
     return await update.message.reply_text('New poker game started. Type /join to join the game.')
 
+def card_value(card):
+    rank = card['rank']
+    if rank.isdigit():
+        return int(rank)
+    elif rank in ['J', 'Q', 'K']:
+        return 10
+    elif rank == 'A':
+        return 11
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return await update.message.reply_text("this is a help message")
 
