@@ -1,14 +1,13 @@
 from telegram import Update
 from telegram.ext import ContextTypes,   Updater, CommandHandler, CallbackContext
 import logging
-import random
 from utils import generate_deck , evaluate_hand
 
 token = "6096641141:AAE7Mcdq2ybgJBxk_eA6mPwh4yNdpz4ZR-k"
 username = "@PokerDokerDealer_bot"
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
-TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"
+TOKEN = "6096641141:AAE7Mcdq2ybgJBxk_eA6mPwh4yNdpz4ZR-k"
 updater = Updater(token=TOKEN, use_context=True)
 dp = updater.dispatcher
 
