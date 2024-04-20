@@ -1,7 +1,13 @@
+import pandas
 import telebot
 from binance.client import Client
-import talib as ta
+from ta.volume import money_flow_index
+from ta.trend import CCIIndicator, MACD, SMAIndicator, ADXIndicator
+from ta.momentum import StochRSIIndicator, WilliamsRIndicator, RSIIndicator
+from ta.volatility import BollingerBands
 import numpy as np
+from utils import getGPT
+
 
 api_key = "7084157416:AAFuOQ2rZCbEpagFH8U0oyygZv7ORLOVgpg"
 
@@ -33,8 +39,9 @@ def commands(message):
 @bot.message_handler(commands=['start'])
 def start(message):
     bot.send_message(message.chat.id, (
-        '*Hello !' '\n''\n' 'This bot allows the price and indicators to be displayed instantly on all coins on Binance with using Binance API.' '\n' 'You can find commands in /commands' '\n''\n' 'Check out:* https://github.com/veyasins/crypto-technicalanalysis-bot'),
-                     parse_mode="Markdown")
+        'Hello !' '\n''\n'
+        'This bot allows the price and indicators to be displayed instantly on all coins on Binance with using Binance API.' '\n' 'You can find commands in /commands'),
+                     )
 
 
 @bot.message_handler(commands=['intervals'])
@@ -79,131 +86,68 @@ def send_price(message):
         diff = close[-1] - dailyopen[-1]
         formula = (diff / close[-1]) * 100
         price = '*+' + (str(diff).split('.')[0] + '.' + str(diff).split('.')[1][:3]) + ' (+' + (
-                    str(formula).split('.')[0] + '.' + str(formula).split('.')[1][:2]) + '%)*'
+                str(formula).split('.')[0] + '.' + str(formula).split('.')[1][:2]) + '%)*'
     else:
         diff = dailyopen[-1] - close[-1]
         formula = 100 - (close[-1] * 100 / dailyopen[-1])
         price = '*-' + (str(diff).split('.')[0] + '.' + str(diff).split('.')[1][:3]) + ' (-' + (
-                    str(formula).split('.')[0] + '.' + str(formula).split('.')[1][:2]) + '%)*'
+                str(formula).split('.')[0] + '.' + str(formula).split('.')[1][:2]) + '%)*'
 
-    mfi = ta.MFI(high=np.array(high, dtype=float), low=np.array(low, dtype=float), close=np.array(close, dtype=float),
-                 volume=np.array(volume, dtype=float), timeperiod=14)[-1]
-    cci = ta.CCI(high=np.array(high, dtype=float), low=np.array(low, dtype=float), close=np.array(close, dtype=float),
-                 timeperiod=20)[-1]
-    rsi = ta.RSI(close_array, timeperiod=14)
-    macd, macdsignal, macdhist = ta.MACD(close_array, fastperiod=12, slowperiod=26, signalperiod=9)
-    upper, middle, lower = ta.BBANDS(close_array, timeperiod=20, nbdevup=2, nbdevdn=2)
-    sma50 = ta.SMA(close_array, timeperiod=50)[-1]
-    williams = \
-    ta.WILLR(high=np.array(high, dtype=float), low=np.array(low, dtype=float), close=np.array(close, dtype=float),
-             timeperiod=14)[-1]
-    srsi = np.asarray(rsi)
-    stochrsik, stochrsid = ta.STOCH(srsi, srsi, srsi, fastk_period=14, slowk_period=3, slowd_period=3)
-    adx = ta.ADX(high=np.array(high, dtype=float), low=np.array(low, dtype=float), close=np.array(close, dtype=float),
-                 timeperiod=14)
-    data = {'‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ': symbol, 'Price': [str(close_array[-1]) + '$  ' + price], 'RSI': [rsi[-1]],
-            'MACD': [macdhist[-1]], 'MFI': [mfi], 'CCI': [cci], 'BB': [middle[-1]], 'SMA 50': [str(sma50)],
-            'WILL %R': [williams], 'Stoch RSI': [stochrsik[-1]], 'ADX': [adx[-1]]}
-    indlist = [(str(close_array[-1]) + '$  ' + price), str(rsi[-1]), str(macdhist[-1]), str(mfi), str(cci),
-               str(middle[-1]), str(sma50), str(williams), str(stochrsik[-1]), str(adx[-1])]
+    #
+    mfi = money_flow_index(high=pandas.Series(high), low=pandas.Series(low), close=pandas.Series(close),
+                           volume=pandas.Series(volume))
 
-    ozelListemiz = []
-    for indicator in indlist:
-        splitted = indicator.split(".")
-        sonsayi = ""
-        if (int(splitted[0]) == 0):
-            for element in range(0, len(splitted[1])):
-                if (int(splitted[1][element]) > 0):
-                    sonsayi = splitted[1][:element + 2]
-                    ozelListemiz.append([splitted[0], sonsayi]);
-                    break
-        else:
-            sonsayi = splitted[1][:2]
-            ozelListemiz.append([splitted[0], sonsayi]);
+    cci = CCIIndicator(high=pandas.Series(high), low=pandas.Series(low), close=pandas.Series(close))
 
-    listnum = 0
-    yazi = ''
-    for x in data:
-        numtostr = str(data[x])
-        if (x != "‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ "):
-            yazihali = numtostr[1:len(numtostr) - 1]
-            yazi = yazi + '*' + str(x) + ': ' + '*' + ozelListemiz[listnum][0] + "." + ozelListemiz[listnum][1]
-            if (x == "Price"):
-                if (1 == 1):
-                    yazi = yazi + '$  ' + price + "\n"
-            if (x == "RSI"):
-                if (data[x][0] < 30):
-                    yazi = yazi + " - *Buy* \n"
-                elif (data[x][0] > 70):
-                    yazi = yazi + " - *Sell* \n"
-                elif (data[x][0] > 30 and data[x][0] < 70):
-                    yazi = yazi + " - *Notr* \n"
-            if (x == "MACD"):
-                if macd[-1] > macdsignal[-1] and macd[-2] < macdsignal[-2]:
-                    yazi = yazi + " - Bullish Crossover 🟢\n"
-                elif macd[-1] < macdsignal[-1] and macd[-2] > macdsignal[-2]:
-                    yazi = yazi + " - *Bearish Crossover* 🔴\n"
-                else:
-                    yazi = yazi + " - *Notr* \n"
-            if (x == "MFI"):
-                if (data[x][0] < 20):
-                    yazi = yazi + " - *Buy* \n"
-                elif (data[x][0] > 80):
-                    yazi = yazi + " - *Sell* \n"
-                elif (data[x][0] > 20 and data[x][0] < 80):
-                    yazi = yazi + " - *Notr* \n"
-            if (x == "CCI"):
-                if (data[x][0] < -100):
-                    yazi = yazi + " - *Buy* \n"
-                elif (data[x][0] > 100):
-                    yazi = yazi + " - *Sell* \n"
-                elif (data[x][0] > -100 and data[x][0] < 100):
-                    yazi = yazi + " - *Notr* \n"
-            if (x == "BB"):
-                if (str(close[-1]) > str(upper[-1])):
-                    yazi = yazi + " - *Sell* \n"
-                elif (str(close[-1]) < str(lower[-1])):
-                    yazi = yazi + " - *Buy* \n"
-                elif (str(lower[-1]) < str(close[-1]) < str(middle[-1]) and close[-1] <= (
-                        middle[-1] - (middle[-1] - lower[-1]) * 0.65)):
-                    yazi = yazi + " - *Near Lower Band* \n"
-                elif (str(upper[-1]) > str(close[-1]) > str(middle[-1]) and close[-1] >= (
-                        upper[-1] - (upper[-1] - middle[-1]) * 0.45)):
-                    yazi = yazi + " - *Near Upper Band* \n"
-                else:
-                    yazi = yazi + " - *Normal* \n"
-            if (x == "SMA 50"):
-                if (data[x][0] < str(close[-1])):
-                    yazi = yazi + " - *Price is under SMA* \n"
-                elif (data[x][0] > str(close[-1])):
-                    yazi = yazi + " - *Price is above SMA* \n"
-            if (x == "WILL %R"):
-                if (data[x][0] < -80):
-                    yazi = yazi + " - *Buy* \n"
-                elif (data[x][0] > -20):
-                    yazi = yazi + " - *Sell* \n"
-                elif (data[x][0] > -80 and data[x][0] < -20):
-                    yazi = yazi + " - *Notr* \n"
-            if (x == "Stoch RSI"):
-                if (data[x][0] < 20):
-                    yazi = yazi + " - *Buy* \n"
-                elif (data[x][0] > 80):
-                    yazi = yazi + " - *Sell* \n"
-                elif (data[x][0] > 20 and data[x][0] < 80):
-                    yazi = yazi + " - *Notr* \n"
-            if (x == "ADX"):
-                if (data[x][0] < 25):
-                    yazi = yazi + " - *Weak Trend* \n"
-                elif (data[x][0] > 60):
-                    yazi = yazi + " - *Very Strong Trend* \n"
-                elif (data[x][0] > 25 and data[x][0] < 50):
-                    yazi = yazi + " - *Strong Trend* \n"
-                pass
-            if (listnum <= len(ozelListemiz) - 2):
-                listnum += 1
-        else:
-            yazi = yazi + str(x) + '   ' + '*' + data[x] + ' on Binance - ' + interval + '*' + '\n'
-    bot.send_message(message.chat.id, yazi.replace("'", ""), parse_mode="Markdown")
+    srsi = StochRSIIndicator(close=pandas.Series(close))
+    rsi = StochRSIIndicator(close=pandas.Series(close) )
+    macd = MACD(pandas.Series(close), window_fast=12, window_slow=26, window_sign=9)
+    bbands = BollingerBands(pandas.Series(close), window=20, window_dev=2)
+
+    sma50 = SMAIndicator(pandas.Series(close), window=50)
+    williams = WilliamsRIndicator(high=pandas.Series(high), low=pandas.Series(low), close=pandas.Series(close), lbp=14)
+
+    adx = ADXIndicator(high=pandas.Series(high), low=pandas.Series(low), close=pandas.Series(close),window=14)
 
 
+
+    # data = {'‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ': symbol, 'Price': [str(close_array[-1]) + '$  ' + price], 'RSI': [rsi],
+    #         'MACD': [macd.macd_diff()], 'MFI': [mfi], 'CCI': [cci], 'BB': [bbands.bollinger_mavg()], 'SMA 50': [str(sma50)],
+    #         'WILL %R': [williams], 'ADX': [adx]}
+
+#
+    # response = client.chat.completions.create(
+    #     model="gpt-3.5-turbo",
+    #     messages=[{"role": "user", "content": f'''
+    #     I have technical indicator data for a crypto token and I'd like your help to analyze its potential risk. Here's the information I have:
+    #
+    # MFI (Money Flow Index): {mfi}
+    # RSI (Relative Strength Index): {rsi}
+    # CCI (Commodity Channel Index): {cci}
+    # MACD (Moving Average Convergence Divergence):
+    # [ MACD line value : {macd.macd()},
+    # Signal line value : {macd.macd_signal()}, and
+    # Histogram value   : {macd.macd_diff()}]
+    #
+    # Bollinger Bands (BBands): [Insert Upper Bollinger Band value, Lower Bollinger Band value, and Middle Bollinger Band value here (separate values)]
+    # SMA50 (Simple Moving Average 50): f{sma50}
+    # WilliamsR (Williams %R): {williams}
+    # ADX (Average Directional Index): {adx}
+    # Based on these technical indicators, can you assess if there are any red flags suggesting a potentially risky investment?
+    #
+    # Here are some specific aspects I'd like you to consider in your analysis:
+    #
+    # Overbought or oversold conditions: Analyze indicators like RSI, MFI, and WilliamsR to identify if the token is in overbought or oversold territory.
+    # Price momentum: Analyze MACD and ADX to understand the current price momentum and potential trend direction.
+    # Volatility: Analyze Bollinger Bands and the spread between the bands to assess the current market volatility.
+    # Price deviation from moving average: Analyze the position of the price relative to the SMA50 to identify potential trend breaks.
+    # Please provide a comprehensive analysis of these indicators and a clear indication of any red flags you identify. Additionally, if possible, suggest any further technical analysis or information that might be helpful in making an informed investment decision.
+    #
+    # '''}],
+    #     stream  = False
+    # )
+    response = getGPT(mfi , rsi.stochrsi(),cci.cci(),macd.macd(),macd.macd_signal(),macd.macd_diff(),sma50.sma_indicator(),williams.williams_r(),adx.adx())
+    bot.send_message(message.chat.id, response, parse_mode="Markdown")
+
+print("started polling")
 bot.polling()
