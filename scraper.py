@@ -109,43 +109,6 @@ def send_price(message):
 
     adx = ADXIndicator(high=pandas.Series(high), low=pandas.Series(low), close=pandas.Series(close),window=14)
 
-
-
-    # data = {'‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ': symbol, 'Price': [str(close_array[-1]) + '$  ' + price], 'RSI': [rsi],
-    #         'MACD': [macd.macd_diff()], 'MFI': [mfi], 'CCI': [cci], 'BB': [bbands.bollinger_mavg()], 'SMA 50': [str(sma50)],
-    #         'WILL %R': [williams], 'ADX': [adx]}
-
-#
-    # response = client.chat.completions.create(
-    #     model="gpt-3.5-turbo",
-    #     messages=[{"role": "user", "content": f'''
-    #     I have technical indicator data for a crypto token and I'd like your help to analyze its potential risk. Here's the information I have:
-    #
-    # MFI (Money Flow Index): {mfi}
-    # RSI (Relative Strength Index): {rsi}
-    # CCI (Commodity Channel Index): {cci}
-    # MACD (Moving Average Convergence Divergence):
-    # [ MACD line value : {macd.macd()},
-    # Signal line value : {macd.macd_signal()}, and
-    # Histogram value   : {macd.macd_diff()}]
-    #
-    # Bollinger Bands (BBands): [Insert Upper Bollinger Band value, Lower Bollinger Band value, and Middle Bollinger Band value here (separate values)]
-    # SMA50 (Simple Moving Average 50): f{sma50}
-    # WilliamsR (Williams %R): {williams}
-    # ADX (Average Directional Index): {adx}
-    # Based on these technical indicators, can you assess if there are any red flags suggesting a potentially risky investment?
-    #
-    # Here are some specific aspects I'd like you to consider in your analysis:
-    #
-    # Overbought or oversold conditions: Analyze indicators like RSI, MFI, and WilliamsR to identify if the token is in overbought or oversold territory.
-    # Price momentum: Analyze MACD and ADX to understand the current price momentum and potential trend direction.
-    # Volatility: Analyze Bollinger Bands and the spread between the bands to assess the current market volatility.
-    # Price deviation from moving average: Analyze the position of the price relative to the SMA50 to identify potential trend breaks.
-    # Please provide a comprehensive analysis of these indicators and a clear indication of any red flags you identify. Additionally, if possible, suggest any further technical analysis or information that might be helpful in making an informed investment decision.
-    #
-    # '''}],
-    #     stream  = False
-    # )
     response = getGPT(mfi , rsi.stochrsi(),cci.cci(),macd.macd(),macd.macd_signal(),macd.macd_diff(),sma50.sma_indicator(),williams.williams_r(),adx.adx())
     bot.send_message(message.chat.id, response, parse_mode="Markdown")
 
