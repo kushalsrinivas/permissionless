@@ -1,5 +1,12 @@
 import random
+def generate_deck():
+    ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
+    suits = ['Hearts', 'Diamonds', 'Clubs', 'Spades']
+    deck = [{'rank': rank, 'suit': suit} for rank in ranks for suit in suits]
+    random.shuffle(deck)
+    return deck
 
+# Helper function to calculate the value of a card for scoring
 def card_value(card):
     rank = card['rank']
     if rank.isdigit():
@@ -7,8 +14,9 @@ def card_value(card):
     elif rank in ['J', 'Q', 'K']:
         return 10
     elif rank == 'A':
-        return 11
+        return 11  # For simplicity, Aces are always worth 11 in this example
 
+# Helper function to evaluate a player's hand
 def evaluate_hand(user_id):
     global players, community_cards
     player_hand = players[user_id]['hand'] + community_cards
@@ -74,11 +82,3 @@ def is_one_pair(hand):
         if hand[i]['rank'] == hand[i + 1]['rank']:
             return True
     return False
-
-
-def generate_deck():
-    rank = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
-    suits = ['Hearts', 'Diamonds', 'Clubs', 'Spades']
-    deck = [{'rank': rank, 'suit': suit} for rank in rank for suit in suits]
-    random.shuffle(deck)
-    return deck
