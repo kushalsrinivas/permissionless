@@ -6,20 +6,36 @@ from g4f.client import Client
 client = Client()
 
 
+def analyse(portiflio :str , tolerance : str , goals : str):
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "user", "content": f'''
+        AI Portfolio Analyst, Help Me Assess My Crypto Risk!
+I'd like your assistance in evaluating the potential risk of my cryptocurrency portfolio. Here's the information I have for each holding:
+
+For each cryptocurrency in my portfolio, please analyze the following:
+{portiflio}
+Based on this data, I'd appreciate your insights on the following aspects of my portfolio:
+
+Overall risk diversification: Analyze the spread of assets across different sectors (e.g., DeFi, NFTs, Metaverse) and assess if there's overexposure to any particular category.
+Concentration risk: Identify any single holding that constitutes a significant portion of the portfolio value.
+Volatility risk: Analyze the historical price movements and technical indicators (if available) to assess the overall volatility of the portfolio.
+Potential red flags: Look for any individual holdings or portfolio characteristics that might suggest a higher risk profile. (e.g., overly concentrated in new, unproven projects)
+Additionally, please provide suggestions for potential improvements to my portfolio, such as:
+
+Diversification recommendations: Suggest asset classes or specific cryptocurrencies that could improve risk diversification.
+Rebalancing suggestions: If necessary, suggest adjustments to individual holdings to achieve a more balanced risk profile.
+Here's some important context to consider:
+My risk tolerance: {tolerance}
+Investment goals: {goals}
+
+'''}]
+        , stream=False
+    )
+    return response.choices[0].message.content
+
+
 def getGPT(mfi, rsi, cci, lv, signal, hist, sma50, williams, adx):
-    print(mfi)
-    print(rsi)
-    print(cci)
-    print(lv)
-    print(signal)
-    print(hist)
-    print(sma50)
-    print(williams)
-    print(adx)
-
-
-
-
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": f'''

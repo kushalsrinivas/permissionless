@@ -6,7 +6,7 @@ from ta.trend import CCIIndicator, MACD, SMAIndicator, ADXIndicator
 from ta.momentum import StochRSIIndicator, WilliamsRIndicator, RSIIndicator
 from ta.volatility import BollingerBands
 import numpy as np
-from utils import getGPT
+from utils import getGPT ,analyse
 
 
 api_key = "7084157416:AAFuOQ2rZCbEpagFH8U0oyygZv7ORLOVgpg"
@@ -32,7 +32,7 @@ exchange_info = trader.client.get_exchange_info()
 
 @bot.message_handler(commands=['commands'])
 def commands(message):
-    bot.send_message(message.chat.id, ('*Bot Commands:' '\n' '/start' '\n' '/intervals' '\n' '/indicator*'),
+    bot.send_message(message.chat.id, ('*Bot Commands:' '\n' '/start' '\n' '/intervals' '\n' '/indicator*''\n' '/hodl*''\n' '/trading*'),
                      parse_mode="Markdown")
 
 
@@ -43,6 +43,17 @@ def start(message):
         'This bot allows the price and indicators to be displayed instantly on all coins on Binance with using Binance API.' '\n' 'You can find commands in /commands'),
                      )
 
+@bot.message_handler(commands =['hodl'])
+def analyse(message):
+    response = analyse(message , "moderate" , "long-term hodling")
+    bot.send_message(message.chat.id, response,
+                     parse_mode="Markdown")
+
+@bot.message_handler(commands =['trading'])
+def analyse(message):
+    response = analyse(portiflio=message , tolerance="moderate" , goals="trading")
+    bot.send_message(message.chat.id, response,
+                     parse_mode="Markdown")
 
 @bot.message_handler(commands=['intervals'])
 def intervals(message):
